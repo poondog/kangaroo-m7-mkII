@@ -1011,6 +1011,22 @@ static int msm_routing_set_compressed2_vol_mixer(struct snd_kcontrol *kcontrol,
 	return 0;
 }
 
+static int msm_routing_get_compressed2_vol_mixer(struct snd_kcontrol *kcontrol,
+				struct snd_ctl_elem_value *ucontrol)
+{
+	ucontrol->value.integer.value[0] = msm_route_compressed2_vol_control;
+	return 0;
+}
+
+static int msm_routing_set_compressed2_vol_mixer(struct snd_kcontrol *kcontrol,
+				struct snd_ctl_elem_value *ucontrol)
+{
+	if (!compressed_set_volume(ucontrol->value.integer.value[0]))
+		msm_route_compressed2_vol_control =
+			ucontrol->value.integer.value[0];
+	return 0;
+}
+
 static int msm_routing_get_srs_trumedia_control(struct snd_kcontrol *kcontrol,
 				struct snd_ctl_elem_value *ucontrol)
 {
@@ -2264,6 +2280,12 @@ static const struct snd_kcontrol_new compressed_vol_mixer_controls[] = {
 	SOC_SINGLE_EXT_TLV("COMPRESSED RX Volume", SND_SOC_NOPM, 0,
 	INT_RX_VOL_GAIN, 0, msm_routing_get_compressed_vol_mixer,
 	msm_routing_set_compressed_vol_mixer, compressed_rx_vol_gain),
+};
+
+static const struct snd_kcontrol_new compressed2_vol_mixer_controls[] = {
+	SOC_SINGLE_EXT_TLV("COMPRESSED2 RX Volume", SND_SOC_NOPM, 0,
+	INT_RX_VOL_GAIN, 0, msm_routing_get_compressed2_vol_mixer,
+	msm_routing_set_compressed2_vol_mixer, compressed2_rx_vol_gain),
 };
 
 static const struct snd_kcontrol_new compressed2_vol_mixer_controls[] = {
