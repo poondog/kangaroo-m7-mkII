@@ -197,6 +197,18 @@ static inline pte_t *pmd_page_vaddr(pmd_t pmd)
 	((pte_val(pte) & (L_PTE_PRESENT | L_PTE_USER)) == \
 	 (L_PTE_PRESENT | L_PTE_USER))
 
+#define pte_none(pte)		(!pte_val(pte))
+#define pte_present(pte)	(pte_val(pte) & L_PTE_PRESENT)
+#define pte_write(pte)		(!(pte_val(pte) & L_PTE_RDONLY))
+#define pte_dirty(pte)		(pte_val(pte) & L_PTE_DIRTY)
+#define pte_young(pte)		(pte_val(pte) & L_PTE_YOUNG)
+#define pte_exec(pte)		(!(pte_val(pte) & L_PTE_XN))
+#define pte_special(pte)	(0)
+
+#define pte_present_user(pte) \
+	((pte_val(pte) & (L_PTE_PRESENT | L_PTE_USER)) == \
+	 (L_PTE_PRESENT | L_PTE_USER))
+
 #if __LINUX_ARM_ARCH__ < 6
 static inline void __sync_icache_dcache(pte_t pteval)
 {
