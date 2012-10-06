@@ -1330,20 +1330,6 @@ static struct snd_soc_dai_link msm_dai[] = {
 		.codec_dai_name = "snd-soc-dummy-dai",
 		.codec_name = "snd-soc-dummy",
         },
-        {
-                .name = "AUXPCM Hostless",
-                .stream_name = "AUXPCM Hostless",
-                .cpu_dai_name        = "AUXPCM_HOSTLESS",
-                .platform_name        = "msm-pcm-hostless",
-                .dynamic = 1,
-                .trigger = {SND_SOC_DPCM_TRIGGER_POST,
-                                SND_SOC_DPCM_TRIGGER_POST},
-                .no_host_mode = SND_SOC_DAI_LINK_NO_HOST,
-                .ignore_suspend = 1,
-                .ignore_pmdown_time = 1, /* dainlink has playback support */
-                .codec_dai_name = "snd-soc-dummy-dai",
-                .codec_name = "snd-soc-dummy",
-        },
         /* Secondary I2S RX Hostless */
         {
                 .name = "SEC_I2S_RX Hostless",
@@ -1414,10 +1400,24 @@ static struct snd_soc_dai_link msm_dai[] = {
 		.ignore_suspend = 1,
 		.ignore_pmdown_time = 1, 
 		.be_id = MSM_FRONTEND_DAI_MULTIMEDIA8,
-	},
-	
-	{
-		.name = LPASS_BE_SLIMBUS_0_RX,
+        },
+        {
+                .name = "AUXPCM Hostless",
+                .stream_name = "AUXPCM Hostless",
+                .cpu_dai_name        = "AUXPCM_HOSTLESS",
+                .platform_name        = "msm-pcm-hostless",
+                .dynamic = 1,
+                .trigger = {SND_SOC_DPCM_TRIGGER_POST,
+                                SND_SOC_DPCM_TRIGGER_POST},
+                .no_host_mode = SND_SOC_DAI_LINK_NO_HOST,
+                .ignore_suspend = 1,
+                .ignore_pmdown_time = 1, /* dainlink has playback support */
+                .codec_dai_name = "snd-soc-dummy-dai",
+                .codec_name = "snd-soc-dummy",
+        },
+        /* Backend DAI Links */
+        {
+                .name = LPASS_BE_SLIMBUS_0_RX,
 		.stream_name = "Slimbus Playback",
 		.cpu_dai_name = "msm-dai-q6.16384",
 		.platform_name = "msm-pcm-routing",
