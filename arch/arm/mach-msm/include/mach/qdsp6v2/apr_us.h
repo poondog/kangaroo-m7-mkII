@@ -15,21 +15,6 @@
 
 #include <mach/qdsp6v2/apr.h>
 
-#define USM_SESSION_CMD_MEMORY_MAP			0x00012304
-struct usm_stream_cmd_memory_map {
-	struct apr_hdr	hdr;
-	u32		buf_add;
-	u32		buf_size;
-	u16		mempool_id;
-	u16		reserved;
-} __packed;
-
-#define USM_SESSION_CMD_MEMORY_UNMAP			0x00012305
-struct usm_stream_cmd_memory_unmap {
-	struct apr_hdr  hdr;
-	u32             buf_add;
-} __packed;
-
 #define USM_SESSION_CMD_RUN				0x00012306
 struct usm_stream_cmd_run {
 	struct apr_hdr hdr;
@@ -104,31 +89,6 @@ struct usm_stream_media_format_update {
 	
 	u8  transp_data[USM_MAX_CFG_DATA_SIZE];
 } __packed;
-
-
-#define USM_DATA_CMD_READ				0x0001230E
-struct usm_stream_cmd_read {
-	struct apr_hdr  hdr;
-	u32                 buf_add;
-	u32                 buf_size;
-	u32                 uid;
-	u32                 counter;
-} __packed;
-
-#define USM_DATA_EVENT_READ_DONE			0x0001230F
-
-#define USM_DATA_CMD_WRITE				0x00011273
-struct usm_stream_cmd_write {
-	struct apr_hdr hdr;
-	u32 buf_add;
-	u32 buf_size;
-	u32 uid;
-	u32 msw_ts;
-	u32 lsw_ts;
-	u32 flags;
-} __packed;
-
-#define USM_DATA_EVENT_WRITE_DONE			0x00011274
 
 #define USM_SESSION_CMD_SIGNAL_DETECT_MODE		0x00012719
 

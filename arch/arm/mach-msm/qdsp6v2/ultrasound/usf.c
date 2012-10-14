@@ -26,8 +26,8 @@
 #include "q6usm.h"
 #include "usfcdev.h"
 
-#define DRV_VERSION "1.4.0"
-#define USF_VERSION_ID 0x0140
+#define DRV_VERSION "1.4.1"
+#define USF_VERSION_ID 0x0141
 
 #define USF_TIMEOUT_JIFFIES (1*HZ) 
 
@@ -337,7 +337,7 @@ static void usf_rx_cb(uint32_t opcode, uint32_t token,
 	}
 
 	switch (opcode) {
-	case USM_DATA_EVENT_WRITE_DONE:
+	case Q6USM_EVENT_WRITE_DONE:
 		wake_up(&usf_xx->wait);
 		break;
 	default:
@@ -356,14 +356,14 @@ static void usf_tx_cb(uint32_t opcode, uint32_t token,
 	}
 
 	switch (opcode) {
-	case USM_DATA_EVENT_READ_DONE:
+	case Q6USM_EVENT_READ_DONE:
 		if (token == USM_WRONG_TOKEN)
 			usf_xx->usf_state = USF_ERROR_STATE;
 		usf_xx->new_region = token;
 		wake_up(&usf_xx->wait);
 		break;
 
-	case USM_SESSION_EVENT_SIGNAL_DETECT_RESULT:
+	case Q6USM_EVENT_SIGNAL_DETECT_RESULT:
 		usf_xx->us_detect_type = (payload[APR_US_DETECT_RESULT_IND]) ?
 					USF_US_DETECT_YES :
 					USF_US_DETECT_NO;
@@ -1029,8 +1029,7 @@ static int usf_get_tx_update(struct usf_type *usf, unsigned long arg)
 
 	if ((usf_xx->usf_state != USF_WORK_STATE) ||
 	    (rc == -ERESTARTSYS)) {
-		pr_err("%s: Getting ready region failed "
-			"work state[%d]; rc[%d]\n",
+		pr_err("%s: Get ready region failure; state[%d]; rc[%d]\n",
 		       __func__, usf_xx->usf_state, rc);
 		return -EINTR;
 	}
@@ -1446,4 +1445,3 @@ static int __init usf_init(void)
 device_initcall(usf_init);
 
 MODULE_DESCRIPTION("Ultrasound framework driver");
-MODULE_VERSION(DRV_VERSION);
