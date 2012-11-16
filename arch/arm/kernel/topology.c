@@ -249,29 +249,34 @@ void store_cpu_topology(unsigned int cpuid)
 	mpidr = read_cpuid_mpidr();
 
 	
-	if ((mpidr & MPIDR_SMP_BITMASK) == MPIDR_SMP_VALUE) {
+	/* create cpu topology mapping */
+        if ((mpidr & MPIDR_SMP_BITMASK) == MPIDR_SMP_VALUE) {
+                /*
+                 * This is a multiprocessor system
+                 * multiprocessor format & multiprocessor mode field are set
+                 */
 
-		if (mpidr & MPIDR_MT_BITMASK) {
-			
-			cpuid_topo->thread_id = (mpidr >> MPIDR_LEVEL0_SHIFT)
-				& MPIDR_LEVEL0_MASK;
-			cpuid_topo->core_id = (mpidr >> MPIDR_LEVEL1_SHIFT)
-				& MPIDR_LEVEL1_MASK;
-			cpuid_topo->socket_id = (mpidr >> MPIDR_LEVEL2_SHIFT)
-				& MPIDR_LEVEL2_MASK;
-		} else {
-			
-			cpuid_topo->thread_id = -1;
-			cpuid_topo->core_id = (mpidr >> MPIDR_LEVEL0_SHIFT)
-				& MPIDR_LEVEL0_MASK;
-			cpuid_topo->socket_id = (mpidr >> MPIDR_LEVEL1_SHIFT)
-				& MPIDR_LEVEL1_MASK;
-		}
-	} else {
-		cpuid_topo->thread_id = -1;
-		cpuid_topo->core_id = 0;
-		cpuid_topo->socket_id = -1;
-	}
+                if (mpidr & MPIDR_MT_BITMASK) {
+                        /* core performance interdependency */
+                        cpuid_topo->thread_id = MPIDR_AFFINITY_LEVEL(mpidr, 0);
+                        cpuid_topo->core_id = MPIDR_AFFINITY_LEVEL(mpidr, 1);
+                        cpuid_topo->socket_id = MPIDR_AFFINITY_LEVEL(mpidr, 2);
+                } else {
+                        /* largely independent cores */
+                        cpuid_topo->thread_id = -1;
+                        cpuid_topo->core_id = MPIDR_AFFINITY_LEVEL(mpidr, 0);
+                        cpuid_topo->socket_id = MPIDR_AFFINITY_LEVEL(mpidr, 1);
+                }
+        } else {
+                /*
+                 * This is an uniprocessor system
+                 * we are in multiprocessor format but uniprocessor system
+                 * or in the old uniprocessor format
+                 */
+                cpuid_topo->thread_id = -1;
+                cpuid_topo->core_id = 0;
+                cpuid_topo->socket_id = -1;
+        }
 
 	
 	update_siblings_masks(cpuid);
