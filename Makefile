@@ -381,10 +381,12 @@ KBUILD_CFLAGS   := -Wall -Wundef -Wstrict-prototypes -Wno-trigraphs \
 		   -fno-strict-aliasing -fno-common \
 		   -Werror-implicit-function-declaration \
 		   -Wno-format-security \
+		   -funswitch-loops -fpredictive-commoning -fgcse-after-reload \
 		   -fno-delete-null-pointer-checks \
 		   -ftree-vectorize \
 		   -mno-unaligned-access \
 		   -Wno-sizeof-pointer-memaccess \
+		   -D_$(TARGET_PRODUCT)_
 		   $(KERNEL_MODS)
 KBUILD_AFLAGS_KERNEL :=
 KBUILD_CFLAGS_KERNEL :=
