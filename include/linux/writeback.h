@@ -52,11 +52,12 @@ struct writeback_control {
 	loff_t range_start;
 	loff_t range_end;
 
-	unsigned for_kupdate:1;		
-	unsigned for_background:1;	
-	unsigned tagged_writepages:1;	
-	unsigned for_reclaim:1;		
-	unsigned range_cyclic:1;	
+	unsigned for_kupdate:1;
+	unsigned for_background:1;
+	unsigned tagged_writepages:1;
+	unsigned for_reclaim:1;
+	unsigned range_cyclic:1;
+	unsigned for_sync:1;    /* sync(2) WB_SYNC_ALL writeback */
 };
 
 	
