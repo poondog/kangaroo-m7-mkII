@@ -1472,7 +1472,8 @@ extern int task_fork_unregister(struct notifier_block *n);
 #define PF_MCE_EARLY    0x08000000      
 #define PF_MEMPOLICY	0x10000000	
 #define PF_MUTEX_TESTER	0x20000000	
-#define PF_FREEZER_SKIP	0x40000000	
+#define PF_FREEZER_SKIP	0x40000000
+#define PF_SUSPEND_TASK 0x80000000      /* this thread called freeze_processes and should not be frozen */
 
 #define clear_stopped_child_used_math(child) do { (child)->flags &= ~PF_USED_MATH; } while (0)
 #define set_stopped_child_used_math(child) do { (child)->flags |= PF_USED_MATH; } while (0)
