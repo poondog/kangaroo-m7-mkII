@@ -261,16 +261,20 @@ static int try_context_readahead(struct address_space *mapping,
 	pgoff_t size;
 
 	size = count_history_pages(mapping, ra, offset, max);
-
-	if (!size)
-		return 0;
+ 
+ 	/*
+	 * not enough history pages:
+ 	 * it could be a random read
+ 	 */
+	if (size <= req_size)
+ 		return 0;
 
 	if (size >= offset)
 		size <<= 1;
 
 	ra->start = offset;
-	ra->size = get_init_ra_size(size + req_size, max);
-	ra->async_size = ra->size;
+	ra->size = min(size + req_size, max);
+	ra->async_size = 1;
 
 	return 1;
 }
