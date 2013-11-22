@@ -884,7 +884,7 @@ static int check_firmware(struct dvb_frontend *fe, unsigned int type,
 	int			   rc = 0, is_retry = 0;
 	u16			   hwmodel;
 	v4l2_std_id		   std0;
-	u8			   hw_major, hw_minor, fw_major, fw_minor;
+	u8			   hw_major = 0, hw_minor = 0, fw_major = 0, fw_minor = 0;
 
 	dprintk(1, "%s called\n", __func__);
 
@@ -986,17 +986,17 @@ check_device:
 		goto fail;
 	}
 
-	dprintk(1, "Device is Xceive %d version %d.%d, "
-		"firmware version %d.%d\n",
-		hwmodel, hw_major, hw_minor, fw_major, fw_minor);
+        dprintk(1, "Device is Xceive %d version %d.%d, "
+                "firmware version %d.%d\n",
+                hwmodel, hw_major, hw_minor, fw_major, fw_minor);
 
-	
-	if (priv->firm_version != ((fw_major << 8) | fw_minor)) {
-		printk(KERN_WARNING
-		       "Incorrect readback of firmware version %d.%d.\n",
-		       fw_major, fw_minor);
-		goto fail;
-	}
+        
+        if (priv->firm_version != ((fw_major << 8) | fw_minor)) {
+                printk(KERN_WARNING
+                       "Incorrect readback of firmware version %d.%d.\n",
+                       fw_major, fw_minor);
+                goto fail;
+        }
 
 	
 	if (priv->hwmodel == 0 &&
