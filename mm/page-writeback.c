@@ -288,7 +288,7 @@ static void bdi_writeout_fraction(struct backing_dev_info *bdi,
 				numerator, denominator);
 }
 
-static unsigned int bdi_min_ratio = 5;
+static unsigned int bdi_min_ratio;
 
 int bdi_set_min_ratio(struct backing_dev_info *bdi, unsigned int min_ratio)
 {
