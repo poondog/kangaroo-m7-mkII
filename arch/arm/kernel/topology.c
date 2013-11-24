@@ -67,9 +67,6 @@
  * task load histories.
  */
 static DEFINE_PER_CPU(unsigned long, cpu_scale);
-static DEFINE_PER_CPU(unsigned long, base_cpu_capacity);
-static DEFINE_PER_CPU(unsigned long, invariant_cpu_capacity);
-static DEFINE_PER_CPU(unsigned long, prescaled_cpu_capacity);
 
 static int frequency_invariant_power_enabled = 1;
 
