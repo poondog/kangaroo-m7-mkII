@@ -47,13 +47,13 @@
 static long ratelimit_pages = 32;
 
 
-int dirty_background_ratio = 10;
+int dirty_background_ratio = 1;
 
 unsigned long dirty_background_bytes;
 
 int vm_highmem_is_dirtyable;
 
-int vm_dirty_ratio = 20;
+int vm_dirty_ratio = 1;
 
 unsigned long vm_dirty_bytes;
 
