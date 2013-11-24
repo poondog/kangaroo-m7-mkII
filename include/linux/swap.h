@@ -144,7 +144,6 @@ struct swap_list_t {
 	int next;	
 };
 
-/* Swap 50% full? */
 #define vm_swap_full() (nr_swap_pages*2 < total_swap_pages)
 
 extern unsigned long totalram_pages;
@@ -289,10 +288,9 @@ extern void grab_swap_token(struct mm_struct *);
 extern void __put_swap_token(struct mm_struct *);
 extern void disable_swap_token(struct mem_cgroup *memcg);
 
-/* Only allow swap token to have effect if swap is full */
 static inline int has_swap_token(struct mm_struct *mm)
 {
-	return (mm == swap_token_mm && vm_swap_full());
+	return (mm == swap_token_mm);
 }
 
 static inline void put_swap_token(struct mm_struct *mm)

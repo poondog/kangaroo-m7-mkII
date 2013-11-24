@@ -423,7 +423,7 @@ static void cleanup_timers(struct list_head *head,
 void posix_cpu_timers_exit(struct task_struct *tsk)
 {
 	cleanup_timers(tsk->cpu_timers,
-		       tsk->utime, tsk->stime, tsk_seruntime(tsk));
+		       tsk->utime, tsk->stime, tsk->se.sum_exec_runtime);
 
 }
 void posix_cpu_timers_exit_group(struct task_struct *tsk)
@@ -432,7 +432,7 @@ void posix_cpu_timers_exit_group(struct task_struct *tsk)
 
 	cleanup_timers(tsk->signal->cpu_timers,
 		       tsk->utime + sig->utime, tsk->stime + sig->stime,
-		       tsk_seruntime(tsk) + sig->sum_sched_runtime);
+		       tsk->se.sum_exec_runtime + sig->sum_sched_runtime);
 }
 
 static void clear_dead_task(struct k_itimer *timer, union cpu_time_count now)
@@ -735,7 +735,7 @@ static void check_thread_timers(struct task_struct *tsk,
 		struct cpu_timer_list *t = list_first_entry(timers,
 						      struct cpu_timer_list,
 						      entry);
-		if (!--maxfire || tsk_seruntime(tsk) < t->expires.sched) {
+		if (!--maxfire || tsk->se.sum_exec_runtime < t->expires.sched) {
 			tsk->cputime_expires.sched_exp = t->expires.sched;
 			break;
 		}
@@ -749,11 +749,11 @@ static void check_thread_timers(struct task_struct *tsk,
 			ACCESS_ONCE(sig->rlim[RLIMIT_RTTIME].rlim_max);
 
 		if (hard != RLIM_INFINITY &&
-		    tsk_rttimeout(tsk) > DIV_ROUND_UP(hard, USEC_PER_SEC/HZ)) {
+		    tsk->rt.timeout > DIV_ROUND_UP(hard, USEC_PER_SEC/HZ)) {
 			__group_send_sig_info(SIGKILL, SEND_SIG_PRIV, tsk);
 			return;
 		}
-		if (tsk_rttimeout(tsk) > DIV_ROUND_UP(soft, USEC_PER_SEC/HZ)) {
+		if (tsk->rt.timeout > DIV_ROUND_UP(soft, USEC_PER_SEC/HZ)) {
 			if (soft < hard) {
 				soft += USEC_PER_SEC;
 				sig->rlim[RLIMIT_RTTIME].rlim_cur = soft;
@@ -975,7 +975,7 @@ static inline int fastpath_timer_check(struct task_struct *tsk)
 		struct task_cputime task_sample = {
 			.utime = tsk->utime,
 			.stime = tsk->stime,
-			.sum_exec_runtime = tsk_seruntime(tsk)
+			.sum_exec_runtime = tsk->se.sum_exec_runtime
 		};
 
 		if (task_cputime_expired(&task_sample, &tsk->cputime_expires))
