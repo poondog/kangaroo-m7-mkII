@@ -356,7 +356,7 @@ static int msm_compr_playback_prepare(struct snd_pcm_substream *substream)
 
 	switch (compr->info.codec_param.codec.id) {
 	case SND_AUDIOCODEC_MP3:
-		pr_debug("%s: SND_AUDIOCODEC_MP3\n", __func__);
+		pr_debug("[%p] %s: SND_AUDIOCODEC_MP3\n", prtd, __func__);
 		ret = q6asm_media_format_block(prtd->audio_client,
 				compr->codec);
 		if (ret < 0)
@@ -372,7 +372,7 @@ static int msm_compr_playback_prepare(struct snd_pcm_substream *substream)
 		break;
 
 	case SND_AUDIOCODEC_AAC:
-		pr_debug("%s: SND_AUDIOCODEC_AAC\n", __func__);
+		pr_debug("[%p] %s: SND_AUDIOCODEC_AAC\n", prtd, __func__);
 		memset(&aac_cfg, 0x0, sizeof(struct asm_aac_cfg));
 		aac_cfg.aot = AAC_ENC_MODE_EAAC_P;
 		aac_cfg.format = 0x03;
