@@ -363,7 +363,7 @@ user2credits(u_int32_t user)
 	return (user * HZ * CREDITS_PER_JIFFY) / XT_HASHLIMIT_SCALE;
 }
 
-static void rateinfo_recalc(struct dsthash_ent *dh, unsigned long now)
+static inline void rateinfo_recalc(struct dsthash_ent *dh, unsigned long now)
 {
 	dh->rateinfo.credit += (now - dh->rateinfo.prev) * CREDITS_PER_JIFFY;
 	if (dh->rateinfo.credit > dh->rateinfo.credit_cap)
@@ -498,7 +498,8 @@ hashlimit_mt(const struct sk_buff *skb, struct xt_action_param *par)
 		dh->rateinfo.prev = jiffies;
 		dh->rateinfo.credit = user2credits(hinfo->cfg.avg *
 		                      hinfo->cfg.burst);
-		dh->rateinfo.credit_cap = dh->rateinfo.credit;
+		dh->rateinfo.credit_cap = user2credits(hinfo->cfg.avg *
+		                          hinfo->cfg.burst);
 		dh->rateinfo.cost = user2credits(hinfo->cfg.avg);
 	} else {
 		
