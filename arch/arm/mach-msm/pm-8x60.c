@@ -1115,6 +1115,7 @@ int msm_pm_idle_enter(enum msm_pm_sleep_mode sleep_mode)
 	}
 
 	time = ktime_to_ns(ktime_get()) - time;
+	msm_pm_add_stat(MSM_PM_STAT_REQUESTED_IDLE, time);
 	msm_pm_add_stat(exit_stat, time);
 	do_div(time, 1000);
 	if ((get_kernel_flag() & KERNEL_FLAG_PM_MONITOR) ||
@@ -1461,9 +1462,9 @@ static int __init msm_pm_init(void)
 	pmd_t *pmd;
 	unsigned long pmdval;
 	enum msm_pm_time_stats_id enable_stats[] = {
+		MSM_PM_STAT_REQUESTED_IDLE,
 		MSM_PM_STAT_IDLE_WFI,
 		MSM_PM_STAT_RETENTION,
-		MSM_PM_STAT_IDLE_STANDALONE_POWER_COLLAPSE,
 		MSM_PM_STAT_IDLE_POWER_COLLAPSE,
 		MSM_PM_STAT_IDLE_POWER_COLLAPSE_XO_SHUTDOWN,
 		MSM_PM_STAT_IDLE_POWER_COLLAPSE_VDD_MIN,

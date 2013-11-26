@@ -3742,7 +3742,7 @@ static struct msm_thermal_data msm_thermal_pdata = {
 	.poll_ms = 1000,
 	.limit_temp = 60,
 	.temp_hysteresis = 10,
-	.limit_freq = 918000,
+	.limit_freq = 1134000,
 };
 
 static int __init check_dq_setup(char *str)
