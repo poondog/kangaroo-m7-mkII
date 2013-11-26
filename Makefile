@@ -386,7 +386,6 @@ KBUILD_CFLAGS   := -Wall -Wundef -Wstrict-prototypes -Wno-trigraphs \
 		   -ftree-vectorize \
 		   -mno-unaligned-access \
 		   -Wno-sizeof-pointer-memaccess \
-		   -D_$(TARGET_PRODUCT)_
 		   $(KERNEL_MODS)
 KBUILD_AFLAGS_KERNEL :=
 KBUILD_CFLAGS_KERNEL :=
