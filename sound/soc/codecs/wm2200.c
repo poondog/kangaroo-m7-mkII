@@ -897,6 +897,8 @@ static const char *wm2200_mixer_texts[] = {
 	"EQR",
 	"LHPF1",
 	"LHPF2",
+	"LHPF3",
+	"LHPF4",
 	"DSP1.1",
 	"DSP1.2",
 	"DSP1.3",
@@ -929,6 +931,7 @@ static int wm2200_mixer_values[] = {
 	0x25,
 	0x50,   /* EQ */
 	0x51,
+	0x52,
 	0x60,   /* LHPF1 */
 	0x61,   /* LHPF2 */
 	0x68,   /* DSP1 */
