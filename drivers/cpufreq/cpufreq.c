@@ -363,11 +363,6 @@ static ssize_t store_##file_name					\
 	ret = sscanf(buf, "%u", &freq);					\
 	if (ret != 1)							\
 		return -EINVAL;						\
-	ret = cpufreq_driver->verify(&new_policy); 			\
-	if (ret)              						\
-		pr_err("cpufreq: Frequency verification failed\n");	\
-									\
-	policy->user_policy.object = new_policy.object;     		\
 	if (freq < new_policy.cpuinfo.min_freq)				\
 		freq = new_policy.cpuinfo.min_freq;			\
 	if (freq > new_policy.cpuinfo.max_freq)				\
@@ -375,6 +370,7 @@ static ssize_t store_##file_name					\
 	new_policy.object = freq;					\
 									\
 	ret = __cpufreq_set_policy(policy, &new_policy);		\
+	policy->user_policy.object = policy->object;			\
 									\
 	return ret ? ret : count;					\
 }
