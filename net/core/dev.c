@@ -1202,7 +1202,7 @@ static inline int deliver_skb(struct sk_buff *skb,
 
 static inline bool skb_loop_sk(struct packet_type *ptype, struct sk_buff *skb)
 {
-	if (!ptype->af_packet_priv || !skb->sk)
+	if (ptype->af_packet_priv == NULL)
 		return false;
 
 	if (ptype->id_match)
