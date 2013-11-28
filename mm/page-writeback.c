@@ -165,21 +165,9 @@ void global_dirty_limits(unsigned long *pbackground, unsigned long *pdirty)
 
 static unsigned long zone_dirtyable_memory(struct zone *zone)
 {
-        /*
-         * The effective global number of dirtyable pages may exclude
-         * highmem as a big-picture measure to keep the ratio between
-         * dirty memory and lowmem reasonable.
-         *
-         * But this function is purely about the individual zone and a
-         * highmem zone can hold its share of dirty pages, so we don't
-         * care about vm_highmem_is_dirtyable here.
-         */
-        unsigned long nr_pages = zone_page_state(zone, NR_FREE_PAGES) +
-                zone_reclaimable_pages(zone);
-
-        /* don't allow this to underflow */
-        nr_pages -= min(nr_pages, zone->dirty_balance_reserve);
-        return nr_pages;
+	return zone_page_state(zone, NR_FREE_PAGES) +
+	       zone_reclaimable_pages(zone) -
+	       zone->dirty_balance_reserve;
 }
 
 static unsigned long zone_dirty_limit(struct zone *zone)
