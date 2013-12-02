@@ -381,12 +381,22 @@ KBUILD_CFLAGS   := -Wall -Wundef -Wstrict-prototypes -Wno-trigraphs \
 		   -fno-strict-aliasing -fno-common \
 		   -Werror-implicit-function-declaration \
 		   -Wno-format-security \
-		   -funswitch-loops -fpredictive-commoning -fgcse-after-reload \
+		   -funswitch-loops -fvect-cost-model -fpredictive-commoning -fgcse-after-reload \
 		   -fno-delete-null-pointer-checks \
 		   -ftree-vectorize \
 		   -mno-unaligned-access \
 		   -Wno-sizeof-pointer-memaccess \
 		   $(KERNEL_MODS)
+
+ifdef CONFIG_CC_LINK_TIME_OPTIMIZATION
+KBUILD_CFLAGS   := -flto -fno-toplevel-reorder
+endif
+
+ifdef CONFIG_CC_GRAPHITE_OPTIMIZATION
+KBUILD_CFLAGS   := -floop-interchange -floop-strip-mine \
+                   -floop-block
+endif
+
 KBUILD_AFLAGS_KERNEL :=
 KBUILD_CFLAGS_KERNEL :=
 KBUILD_AFLAGS   := -D__ASSEMBLY__
