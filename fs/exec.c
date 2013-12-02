@@ -537,10 +537,10 @@ static int shift_arg_pages(struct vm_area_struct *vma, unsigned long shift)
 	tlb_gather_mmu(&tlb, mm, 0);
 	if (new_end > old_start) {
 		free_pgd_range(&tlb, new_end, old_end, new_end,
-			vma->vm_next ? vma->vm_next->vm_start : 0);
+			vma->vm_next ? vma->vm_next->vm_start : USER_PGTABLES_CEILING);
 	} else {
 		free_pgd_range(&tlb, old_start, old_end, new_end,
-			vma->vm_next ? vma->vm_next->vm_start : 0);
+			vma->vm_next ? vma->vm_next->vm_start : USER_PGTABLES_CEILING);
 	}
 	tlb_finish_mmu(&tlb, new_end, old_end);
 
@@ -976,10 +976,6 @@ void setup_new_exec(struct linux_binprm * bprm)
 			set_dumpable(current->mm, suid_dumpable);
 	}
 
-	if (!get_dumpable(current->mm))
-		perf_event_exit_task(current);
-
-
 	current->self_exec_id++;
 			
 	flush_signal_handlers(current, 0);
@@ -1031,6 +1027,15 @@ void install_exec_creds(struct linux_binprm *bprm)
 
 	commit_creds(bprm->cred);
 	bprm->cred = NULL;
+
+	/*	
+	 * Disable monitoring for regular users
+	 * when executing setuid binaries. Must
+	 * wait until new credentials are committed
+	 * by commit_creds() above
+	 */
+	if (get_dumpable(current->mm) != SUID_DUMP_USER)
+		perf_event_exit_task(current);
 	security_bprm_committed_creds(bprm);
 	mutex_unlock(&current->signal->cred_guard_mutex);
 }
