@@ -40,7 +40,7 @@ static struct cpus {
  */
 unsigned int polling = HZ*2;
 
-unsigned int temp_threshold = 75;
+unsigned int temp_threshold = 70;
 module_param(temp_threshold, int, 0755);
 
 static struct msm_thermal_data msm_thermal_info;
@@ -67,23 +67,19 @@ static int update_cpu_max_freq(int cpu, uint32_t max_freq)
 		pr_info("%s: Limiting cpu%d max frequency to %d\n",
 				KBUILD_MODNAME, cpu, max_freq);
 	} else {
-		cpu_stats.throttling = false; 
+		cpu_stats.throttling = false;
 		pr_info("%s: Max frequency reset for cpu%d\n",
 				KBUILD_MODNAME, cpu);
 	}
 
-	get_online_cpus();
 	if (cpu_online(cpu)) {
 		struct cpufreq_policy *policy = cpufreq_cpu_get(cpu);
 		if (!policy)
 			return ret;
-		if (max_freq == MSM_CPUFREQ_NO_LIMIT)
-			max_freq = policy->cpuinfo.max_freq;
-		ret = cpufreq_driver_target(policy, max_freq,
+		ret = cpufreq_driver_target(policy, policy->cur,
 				CPUFREQ_RELATION_H);
 		cpufreq_cpu_put(policy);
 	}
-	put_online_cpus();
 
 	return ret;
 }
