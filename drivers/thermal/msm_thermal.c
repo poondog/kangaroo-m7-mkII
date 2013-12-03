@@ -25,15 +25,15 @@
 #include <linux/of.h>
 #include <mach/cpufreq.h>
 
-#define THROTTLE_FREQUENCY 918000
-#define PANIC_THROTTLE_FREQUENCY 486000
+#define THROTTLE_FREQUENCY 1267200
+#define PANIC_THROTTLE_FREQUENCY 729600
 
 static struct cpus {
 	bool throttling;
 	int thermal_steps[5];
 } cpu_stats = {
 	.throttling = false,
-	.thermal_steps = {486000, 702000, 918000, 1134000, 1350000},
+	.thermal_steps = {729600, 1190400, 1497600, 1728000, 1958400},
 };
 
 unsigned int temp_threshold = 70;
