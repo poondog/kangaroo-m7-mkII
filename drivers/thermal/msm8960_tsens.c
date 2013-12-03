@@ -762,46 +762,6 @@ static void tsens8960_sensor_mode_init(void)
 	}
 }
 
-static void tsens8960_sensor_mode_init(void)
-{
-	unsigned int reg_cntl = 0;
-        unsigned int reg = 0, mask = 0, i = 0;
-
-	reg_cntl = readl_relaxed(TSENS_CNTL_ADDR);
-	if (tmdev->hw_type == MSM_8960 || tmdev->hw_type == MDM_9615 ||
-			tmdev->hw_type == APQ_8064) {
-		writel_relaxed(reg_cntl &
-				~((((1 << tmdev->tsens_num_sensor) - 1) >> 1)
-				<< (TSENS_SENSOR0_SHIFT + 1)), TSENS_CNTL_ADDR);
-                tmdev->sensor[TSENS_MAIN_SENSOR].mode = THERMAL_DEVICE_ENABLED;
-
-                for (i = 1; i < tmdev->tsens_num_sensor; i++) {
-                        if (tmdev->sensor[i].mode == THERMAL_DEVICE_ENABLED)
-                                continue;
-
-		        reg = readl_relaxed(TSENS_CNTL_ADDR);
-		        mask = 1 << (i + TSENS_SENSOR0_SHIFT);
-			if ((mask != SENSOR0_EN) && !(reg & SENSOR0_EN)) {
-				pr_info("Main sensor not enabled\n");
-				return;
-			}
-			writel_relaxed(reg | TSENS_SW_RST, TSENS_CNTL_ADDR);
-			if (tmdev->hw_type == MSM_8960 ||
-				tmdev->hw_type == MDM_9615 ||
-				tmdev->hw_type == APQ_8064)
-				reg |= mask | TSENS_8960_SLP_CLK_ENA
-							| TSENS_EN;
-			else
-				reg |= mask | TSENS_8660_SLP_CLK_ENA
-							| TSENS_EN;
-			tmdev->prev_reading_avail = false;
-		        writel_relaxed(reg, TSENS_CNTL_ADDR);
-
-		        tmdev->sensor[i].mode = THERMAL_DEVICE_ENABLED;
-                }
-	}
-}
-
 #ifdef CONFIG_PM
 static int tsens_suspend(struct device *dev)
 {
@@ -1060,17 +1020,6 @@ static int tsens_check_version_support(void)
 	return rc;
 }
 
-static int tsens_check_version_support(void)
-{
-	int rc = 0;
-
-	if (tmdev->hw_type == MSM_8960)
-		if (SOCINFO_VERSION_MAJOR(socinfo_get_version()) == 1)
-			rc = -ENODEV;
-
-	return rc;
-}
-
 static int tsens_calib_sensors(void)
 {
 	int rc = -ENODEV;
@@ -1117,12 +1066,6 @@ int msm_tsens_early_init(struct tsens_platform_data *pdata)
 		return rc;
 	}
 
-	rc = tsens_check_version_support();
-	if (rc < 0) {
-		kfree(tmdev);
-		tmdev = NULL;
-		return rc;
-	}
 	rc = tsens_calib_sensors();
 	if (rc < 0) {
 		kfree(tmdev);
