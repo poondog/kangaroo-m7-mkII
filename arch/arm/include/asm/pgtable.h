@@ -197,6 +197,18 @@ static inline pte_t *pmd_page_vaddr(pmd_t pmd)
 	((pte_val(pte) & (L_PTE_PRESENT | L_PTE_USER)) == \
 	 (L_PTE_PRESENT | L_PTE_USER))
 
+#define pte_none(pte)		(!pte_val(pte))
+#define pte_present(pte)	(pte_val(pte) & L_PTE_PRESENT)
+#define pte_write(pte)		(!(pte_val(pte) & L_PTE_RDONLY))
+#define pte_dirty(pte)		(pte_val(pte) & L_PTE_DIRTY)
+#define pte_young(pte)		(pte_val(pte) & L_PTE_YOUNG)
+#define pte_exec(pte)		(!(pte_val(pte) & L_PTE_XN))
+#define pte_special(pte)	(0)
+
+#define pte_present_user(pte) \
+	((pte_val(pte) & (L_PTE_PRESENT | L_PTE_USER)) == \
+	 (L_PTE_PRESENT | L_PTE_USER))
+
 #if __LINUX_ARM_ARCH__ < 6
 static inline void __sync_icache_dcache(pte_t pteval)
 {
@@ -232,13 +244,24 @@ static inline pte_t pte_mkspecial(pte_t pte) { return pte; }
 
 static inline pte_t pte_modify(pte_t pte, pgprot_t newprot)
 {
-	const pteval_t mask = L_PTE_XN | L_PTE_RDONLY | L_PTE_USER;
-	pte_val(pte) = (pte_val(pte) & ~mask) | (pgprot_val(newprot) & mask);
-	return pte;
+        const pteval_t mask = L_PTE_XN | L_PTE_RDONLY | L_PTE_USER;
+        pte_val(pte) = (pte_val(pte) & ~mask) | (pgprot_val(newprot) & mask);
+        return pte;
 }
 
-#define __SWP_TYPE_SHIFT	3
-#define __SWP_TYPE_BITS		6
+/*
+ * Encode and decode a swap entry.  Swap entries are stored in the Linux
+ * page tables as follows:
+ *
+ *   3 3 2 2 2 2 2 2 2 2 2 2 1 1 1 1 1 1 1 1 1 1
+ *   1 0 9 8 7 6 5 4 3 2 1 0 9 8 7 6 5 4 3 2 1 0 9 8 7 6 5 4 3 2 1 0
+ *   <--------------- offset ----------------------> < type -> 0 0 0
+ *
+ * This gives us up to 31 swap files and 64GB per swap file.  Note that
+ * the offset field is always non-zero.
+ */
+#define __SWP_TYPE_SHIFT        3
+#define __SWP_TYPE_BITS         5
 #define __SWP_TYPE_MASK		((1 << __SWP_TYPE_BITS) - 1)
 #define __SWP_OFFSET_SHIFT	(__SWP_TYPE_BITS + __SWP_TYPE_SHIFT)
 

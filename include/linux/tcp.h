@@ -292,7 +292,10 @@ struct tcp_sock {
 	u32	rcv_tstamp;	
 	u32	lsndtime;	
 
-	
+	struct list_head tsq_node; /* anchor in tsq_tasklet.head list */
+	unsigned long	tsq_flags;
+
+ 	/* Data for direct copy to user */
 	struct {
 		struct sk_buff_head	prequeue;
 		struct task_struct	*task;
@@ -322,9 +325,13 @@ struct tcp_sock {
 	u8	nonagle     : 4,
 		thin_lto    : 1,
 		thin_dupack : 1,
-		unused      : 2;
-
-	u32	srtt;		
+		repair      : 1,
+		unused      : 1;
+	u8	repair_queue;
+	u8	do_early_retrans:1;/* Enable RFC5827 early-retransmit  */
+ 
+ /* RTT measurement */
+	u32	srtt;		/* smoothed round trip time << 3	*/
 	u32	mdev;		
 	u32	mdev_max;	
 	u32	rttvar;		
@@ -418,6 +425,12 @@ struct tcp_sock {
 #endif
 
 	struct tcp_cookie_values  *cookie_values;
+};
+
+enum tsq_flags {
+	TSQ_THROTTLED,
+	TSQ_QUEUED,
+	TSQ_OWNED, /* tcp_tasklet_func() found socket was locked */
 };
 
 static inline struct tcp_sock *tcp_sk(const struct sock *sk)

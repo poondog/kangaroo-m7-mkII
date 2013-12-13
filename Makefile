@@ -1,6 +1,6 @@
 VERSION = 3
 PATCHLEVEL = 4
-SUBLEVEL = 67
+SUBLEVEL = 74
 EXTRAVERSION =
 NAME = Saber-toothed Squirrel
 
@@ -194,7 +194,7 @@ SUBARCH := $(shell uname -m | sed -e s/i.86/i386/ -e s/sun4u/sparc64/ \
 SUBARCH := arm
 export KBUILD_BUILDHOST := $(SUBARCH)
 ARCH		?= $(SUBARCH)
-CROSS_COMPILE	?= /home/poondog/toolchains/android-toolchain-eabi-4.8-2013.10-x86/bin/arm-eabi-
+CROSS_COMPILE	?= /home/poondog/toolchains/gcc-linaro-arm-linux-gnueabihf-4.8-2013.11_linux/bin/arm-linux-gnueabihf-
 CROSS_COMPILE	?= $(CONFIG_CROSS_COMPILE:"%"=%)
 
 # Architecture as present in compile.h
@@ -247,8 +247,8 @@ CONFIG_SHELL := $(shell if [ -x "$$BASH" ]; then echo $$BASH; \
 
 HOSTCC       = gcc
 HOSTCXX      = g++
-HOSTCFLAGS   = -Wall -Wmissing-prototypes -Wstrict-prototypes -Os -fomit-frame-pointer
-HOSTCXXFLAGS = -Os
+HOSTCFLAGS   = -Wall -Wmissing-prototypes -Wstrict-prototypes -O3 -fomit-frame-pointer
+HOSTCXXFLAGS = -O3
 
 # Decide whether to build built-in, modular, or both.
 # Normally, just do built-in.
@@ -353,11 +353,11 @@ CC		= $(srctree)/scripts/gcc-wrapper.py $(REAL_CC)
 
 CHECKFLAGS     := -D__linux__ -Dlinux -D__STDC__ -Dunix -D__unix__ \
 		  -Wbitwise -Wno-return-void $(CF)
-MODFLAGS        = -DMODULE -fgcse-lm -fgcse-sm -fsched-spec-load -fforce-addr -ffast-math -fsingle-precision-constant -mtune=cortex-a15 -marm -march=armv7-a -mfpu=neon -ftree-vectorize -mvectorize-with-neon-quad -funroll-loops
+MODFLAGS        = -DMODULE -fgcse-lm -fgcse-sm -fsched-spec-load -fforce-addr -ffast-math -fsingle-precision-constant -mtune=cortex-a15 -marm -mfpu=neon -ftree-vectorize -mvectorize-with-neon-quad -funroll-loops
 CFLAGS_MODULE   = $(MODFLAGS)
 AFLAGS_MODULE   = $(MODFLAGS)
 LDFLAGS_MODULE  = -T $(srctree)/scripts/module-common.lds
-CFLAGS_KERNEL        = -fgcse-lm -fgcse-sm -fsched-spec-load -fforce-addr -ffast-math -fsingle-precision-constant -mtune=cortex-a15 -marm -march=armv7-a -mfpu=neon -ftree-vectorize -mvectorize-with-neon-quad -funroll-loops
+CFLAGS_KERNEL        = -fgcse-lm -fgcse-sm -fsched-spec-load -fforce-addr -ffast-math -fsingle-precision-constant -mtune=cortex-a15 -marm -mfpu=neon -ftree-vectorize -mvectorize-with-neon-quad -funroll-loops
 AFLAGS_KERNEL        =
 CFLAGS_GCOV        = -fprofile-arcs -ftest-coverage
 
@@ -373,7 +373,7 @@ KBUILD_CPPFLAGS := -D__KERNEL__
 #
 # AK LINARO OPT
 #
-CFLAGS_A15 = -march=armv7-a -mtune=cortex-a15 -mfpu=neon -funsafe-math-optimizations
+CFLAGS_A15 = -mtune=cortex-a15 -mfpu=neon -funsafe-math-optimizations
 CFLAGS_MODULO = -fmodulo-sched -fmodulo-sched-allow-regmoves
 KERNEL_MODS  = $(CFLAGS_A15) $(CFLAGS_MODULO)
 

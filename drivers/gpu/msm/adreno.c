@@ -196,6 +196,18 @@ static const struct {
 		512, 0, 2, SZ_1M, NO_VER, NO_VER },
 };
 
+static unsigned int adreno_isidle(struct kgsl_device *device);
+
+/**
+ * adreno_perfcounter_init: Reserve kernel performance counters
+ * @device: device to configure
+ *
+ * The kernel needs/wants a certain group of performance counters for
+ * its own activities.  Reserve these performance counters at init time
+ * to ensure that they are always reserved for the kernel.  The performance
+ * counters used by the kernel can be obtained by the user, but these
+ * performance counters will remain active as long as the device is alive.
+ */
 
 static void adreno_perfcounter_init(struct kgsl_device *device)
 {
@@ -2352,89 +2364,100 @@ static int adreno_setproperty(struct kgsl_device *device,
 }
 
 static int adreno_ringbuffer_drain(struct kgsl_device *device,
-	unsigned int *regs)
+        unsigned int *regs)
 {
-	struct adreno_device *adreno_dev = ADRENO_DEVICE(device);
-	struct adreno_ringbuffer *rb = &adreno_dev->ringbuffer;
-	unsigned long wait;
-	unsigned long timeout = jiffies + msecs_to_jiffies(ADRENO_IDLE_TIMEOUT);
+        struct adreno_device *adreno_dev = ADRENO_DEVICE(device);
+        struct adreno_ringbuffer *rb = &adreno_dev->ringbuffer;
+        unsigned long wait;
+        unsigned long timeout = jiffies + msecs_to_jiffies(ADRENO_IDLE_TIMEOUT);
 
+        if (!(rb->flags & KGSL_FLAGS_STARTED))
+                return 0;
 
-	wait = jiffies + msecs_to_jiffies(100);
+        /*
+         * The first time into the loop, wait for 100 msecs and kick wptr again
+         * to ensure that the hardware has updated correctly.  After that, kick
+         * it periodically every KGSL_TIMEOUT_PART msecs until the timeout
+         * expires
+         */
 
-	do {
-		if (time_after(jiffies, wait)) {
-			
-			if (adreno_ft_detect(device, regs))
-				return -ETIMEDOUT;
+        wait = jiffies + msecs_to_jiffies(100);
 
-			wait = jiffies + msecs_to_jiffies(KGSL_TIMEOUT_PART);
-		}
-		GSL_RB_GET_READPTR(rb, &rb->rptr);
+        do {
+                if (time_after(jiffies, wait)) {
+                        /* Check to see if the core is hung */
+                        if (adreno_ft_detect(device, regs))
+                                return -ETIMEDOUT;
 
-		if (time_after(jiffies, timeout)) {
-			KGSL_DRV_ERR(device, "rptr: %x, wptr: %x\n",
-				rb->rptr, rb->wptr);
-			return -ETIMEDOUT;
-		}
-	} while (rb->rptr != rb->wptr);
+                        wait = jiffies + msecs_to_jiffies(KGSL_TIMEOUT_PART);
+                }
+                GSL_RB_GET_READPTR(rb, &rb->rptr);
 
-	return 0;
+                if (time_after(jiffies, timeout)) {
+                        KGSL_DRV_ERR(device, "rptr: %x, wptr: %x\n",
+                                rb->rptr, rb->wptr);
+                        return -ETIMEDOUT;
+                }
+        } while (rb->rptr != rb->wptr);
+
+        return 0;
 }
 
+/* Caller must hold the device mutex. */
 int adreno_idle(struct kgsl_device *device)
 {
-	struct adreno_device *adreno_dev = ADRENO_DEVICE(device);
-	unsigned int rbbm_status;
-	unsigned long wait_time;
-	unsigned long wait_time_part;
-	unsigned int prev_reg_val[ft_detect_regs_count];
+        unsigned long wait_time;
+        unsigned long wait_time_part;
+        unsigned int prev_reg_val[ft_detect_regs_count];
 
-	memset(prev_reg_val, 0, sizeof(prev_reg_val));
 
-	kgsl_cffdump_regpoll(device->id,
-		adreno_dev->gpudev->reg_rbbm_status << 2,
-		0x00000000, 0x80000000);
+        memset(prev_reg_val, 0, sizeof(prev_reg_val));
+
+        kgsl_cffdump_regpoll(device->id,
+                adreno_dev->gpudev->reg_rbbm_status << 2,
+                0x00000000, 0x80000000);
 
 retry:
-	
-	if (adreno_ringbuffer_drain(device, prev_reg_val))
-		goto err;
+        /* First, wait for the ringbuffer to drain */
+        if (adreno_ringbuffer_drain(device, prev_reg_val))
+                goto err;
 
-	
-	wait_time = jiffies + msecs_to_jiffies(ADRENO_IDLE_TIMEOUT);
-	wait_time_part = jiffies + msecs_to_jiffies(KGSL_TIMEOUT_PART);
+        /* now, wait for the GPU to finish its operations */
+        wait_time = jiffies + msecs_to_jiffies(ADRENO_IDLE_TIMEOUT);
+        wait_time_part = jiffies + msecs_to_jiffies(KGSL_TIMEOUT_PART);
 
-	while (time_before(jiffies, wait_time)) {
-		adreno_regread(device, adreno_dev->gpudev->reg_rbbm_status,
-			&rbbm_status);
-		if (adreno_is_a2xx(adreno_dev)) {
-			if (rbbm_status == 0x110)
-				return 0;
-		} else {
-			if (!(rbbm_status & 0x80000000))
-				return 0;
-		}
+        while (time_before(jiffies, wait_time)) {
+                if (adreno_isidle(device))
+                        return 0;
 
-		if (time_after(jiffies, wait_time_part)) {
-				wait_time_part = jiffies +
-					msecs_to_jiffies(KGSL_TIMEOUT_PART);
-				if ((adreno_ft_detect(device, prev_reg_val)))
-					goto err;
-		}
+                /* Dont wait for timeout, detect hang faster.  */
+                if (time_after(jiffies, wait_time_part)) {
+                        wait_time_part = jiffies +
+                                msecs_to_jiffies(KGSL_TIMEOUT_PART);
+                        if ((adreno_ft_detect(device, prev_reg_val)))
+                                goto err;
+                }
 
-	}
+        }
 
 err:
-	KGSL_DRV_ERR(device, "spun too long waiting for RB to idle\n");
-	if (KGSL_STATE_DUMP_AND_FT != device->state &&
-		!adreno_dump_and_exec_ft(device)) {
-		wait_time = jiffies + ADRENO_IDLE_TIMEOUT;
-		goto retry;
-	}
-	return -ETIMEDOUT;
+        KGSL_DRV_ERR(device, "spun too long waiting for RB to idle\n");
+        if (KGSL_STATE_DUMP_AND_FT != device->state &&
+                !adreno_dump_and_exec_ft(device)) {
+                wait_time = jiffies + msecs_to_jiffies(ADRENO_IDLE_TIMEOUT);
+                goto retry;
+        }
+        return -ETIMEDOUT;
 }
 
+/**
+ * is_adreno_rbbm_status_idle - Check if GPU core is idle by probing
+ * rbbm_status register
+ * @device - Pointer to the GPU device whose idle status is to be
+ * checked
+ * @returns - Returns whether the core is idle (based on rbbm_status)
+ * false if the core is active, true if the core is idle
+ */
 static bool is_adreno_rbbm_status_idle(struct kgsl_device *device)
 {
 	unsigned int reg_rbbm_status;
@@ -2458,26 +2481,31 @@ static bool is_adreno_rbbm_status_idle(struct kgsl_device *device)
 
 static unsigned int adreno_isidle(struct kgsl_device *device)
 {
-	int status = false;
-	struct adreno_device *adreno_dev = ADRENO_DEVICE(device);
-	struct adreno_ringbuffer *rb = &adreno_dev->ringbuffer;
+        int status = false;
+        struct adreno_device *adreno_dev = ADRENO_DEVICE(device);
+        struct adreno_ringbuffer *rb = &adreno_dev->ringbuffer;
 
-	WARN_ON(device->state == KGSL_STATE_INIT);
-	
-	if (device->state == KGSL_STATE_ACTIVE) {
-		
-		GSL_RB_GET_READPTR(rb, &rb->rptr);
-		if (rb->rptr == rb->wptr) {
+        /* If the device isn't active, don't force it on. */
+        if (kgsl_pwrctrl_isenabled(device)) {
+                /* Is the ring buffer is empty? */
+                GSL_RB_GET_READPTR(rb, &rb->rptr);
+                if (rb->rptr == rb->wptr) {
+                        /*
+                         * Are there interrupts pending? If so then pretend we
+                         * are not idle - this avoids the possiblity that we go
+                         * to a lower power state without handling interrupts
+                         * first.
+                         */
 
-			if (!adreno_dev->gpudev->irq_pending(adreno_dev)) {
-				
-				status = is_adreno_rbbm_status_idle(device);
-			}
-		}
-	} else {
-		status = true;
-	}
-	return status;
+                        if (!adreno_dev->gpudev->irq_pending(adreno_dev)) {
+                                /* Is the core idle? */
+                                status = is_adreno_rbbm_status_idle(device);
+                        }
+                }
+        } else {
+                status = true;
+        }
+        return status;
 }
 
 static int adreno_suspend_context(struct kgsl_device *device)
